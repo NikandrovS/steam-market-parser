@@ -59,12 +59,12 @@ const fetchItemPage = async (tasks = []) => {
 
     validateAvailableItems(task, marketItemsMap, Object.values(inspectorResponse.data));
   } catch (error) {
-    console.log("🍀 ~ Looks like something went wrong:", error.message || error.code);
-
     if (error.message === "Request failed with status code 429") {
       await utils.sendTelegramMessage("Request failed with status code 429");
 
       await new Promise((r) => setTimeout(r, 20000)).catch(() => console.log("timeoutError"));
+    } else {
+      console.log("🍀 ~ Looks like something went wrong:", error.code, error.message);
     }
   }
 
@@ -97,6 +97,7 @@ const validateAvailableItems = async (task, marketItemsMap, availableItems = [])
       listing_id: asset.m,
       subtotal: marketItemsMap[asset.m].converted_price,
       task_id: task.id,
+      item_id: asset.a,
     });
   });
 

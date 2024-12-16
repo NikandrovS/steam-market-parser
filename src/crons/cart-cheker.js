@@ -29,10 +29,10 @@ async function prepareCookies(session) {
 async function checkCart(sessionId, prepearedCookies) {
   // Check cart for new items
   const items = await knex("cart")
-    .select("cart.listing_id", "cart.subtotal", "cart.fee", "cart.asset_float", "cart.task_id", "tasks.amount")
+    .select("cart.listing_id", "cart.subtotal", "cart.fee", "cart.asset_float", "cart.task_id", "cart.item_id", "tasks.amount")
     .where({ is_handled: 0 })
     .leftJoin("tasks", "tasks.id", "cart.task_id")
-    .groupBy("cart.listing_id", "cart.subtotal", "cart.fee", "cart.asset_float", "cart.task_id", "tasks.amount")
+    .groupBy("cart.listing_id", "cart.subtotal", "cart.fee", "cart.asset_float", "cart.task_id", "cart.item_id", "tasks.amount")
     .orderBy("asset_float", "asc");
 
   if (!items.length) return;
@@ -46,7 +46,7 @@ async function checkCart(sessionId, prepearedCookies) {
     // If task is completed, break the loop
     if (item.amount < 1) break;
 
-    console.log("Отправляю запрос на покупку...");
+    console.log("Sending request to buy item...");
 
     // Buy item
     const success = await buyItem(item, { sessionId, prepearedCookies });
@@ -67,7 +67,7 @@ async function checkCart(sessionId, prepearedCookies) {
   await knex("cart").update({ is_handled: 1 }).whereIn("listing_id", affectedIds);
 }
 
-async function buyItem({ listing_id, subtotal, fee, asset_float, task_id }, { sessionId, prepearedCookies }) {
+async function buyItem({ listing_id, subtotal, fee, asset_float, task_id, item_id }, { sessionId, prepearedCookies }) {
   const purchaseTask = await knex("tasks").where({ id: task_id }).first();
 
   let config = {
@@ -100,6 +100,7 @@ async function buyItem({ listing_id, subtotal, fee, asset_float, task_id }, { se
         float_value: asset_float,
         price: (subtotal + fee) / 100,
         task_id,
+        item_id,
       });
 
       console.log(`Float: ${purchaseTask.float} => ${asset_float}`);
@@ -116,7 +117,7 @@ async function buyItem({ listing_id, subtotal, fee, asset_float, task_id }, { se
 
     return true;
   } catch (error) {
-    console.log("Ошибка при покупке", error.code);
+    console.log("Error during purchase", error.code);
 
     const errors = [
       "You cannot purchase this item because somebody else has already purchased it.",
