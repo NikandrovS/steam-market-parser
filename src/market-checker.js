@@ -75,9 +75,15 @@ const fetchItemPage = async (tasks = []) => {
 
 const validateAvailableItems = async (task, marketItemsMap, availableItems = []) => {
   const itemsToPurchase = [];
+  const assetErrors = [];
 
   availableItems.forEach((asset) => {
-    if (asset.error) return console.log(`${asset.status}: `, asset.error);
+    if (asset.error) {
+      assetErrors.push(`${asset.status}: ${asset.error}`);
+      console.log(`${asset.status}: `, asset.error)
+
+      return 
+    }
 
     // Проверяем флоат
     if (asset.floatvalue > task.float) return;
@@ -106,5 +112,9 @@ const validateAvailableItems = async (task, marketItemsMap, availableItems = [])
     console.log("Items are added");
   } else {
     console.log("Nothing is found");
+  }
+
+  if (assetErrors.length) {
+    await utils.sendTelegramMessage([...new Set(assetErrors)].join("\n"));
   }
 }
