@@ -21,7 +21,7 @@ export const sendTelegramMessage = async (message) => {
   }).catch(() => { });
 }
 
-const pageSize = 10;
+const pageSize = 100;
 
 const requestParams = {
   start: 0,
@@ -32,4 +32,4 @@ const requestParams = {
 };
 
 // Transform request params to query string
-export const requestPathFunc = (page) => `/render/?${new URLSearchParams({ ...requestParams, start: page * pageSize }).toString()}`;
+export const requestPathFunc = (page, options = {}) => `/render/?${new URLSearchParams({ ...requestParams, start: page * (options.count || pageSize), ...options }).toString()}`;
